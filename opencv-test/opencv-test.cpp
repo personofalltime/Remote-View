@@ -7,6 +7,8 @@
 #include <string>
 #include <windows.h>
 
+
+
 using namespace cv;
 using namespace std;
 
@@ -27,7 +29,10 @@ int main()
 	VideoCapture cap(1);
 	Mat frame;
 
-	
+	int count = 0;
+	int count2 = 0;
+	bool blinked = false;
+
 	while (1) {
 		cap >> frame;
 
@@ -50,6 +55,13 @@ int main()
 		Mat image_copy = frame.clone();
 		stringstream text;
 
+		int x1 = 0;
+		int y1 = 0;
+
+		namedWindow("Contour: ", WINDOW_NORMAL);
+
+		int x = GetSystemMetrics(SM_CXSCREEN);
+		int y = GetSystemMetrics(SM_CYSCREEN);
 
 		if (!contours.empty()) {
 			drawContours(image_copy, contours, findLargestArea(contours), Scalar(255, 0, 0), 3);
@@ -61,17 +73,33 @@ int main()
 
 			cv::Point origin(0, 10);
 
+			x1 = center.x;
+			y1 = center.y;
+
 			text << "x: " << center.x << "y: " << center.y;
 
 			putText(image_copy, text.str(), origin, FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1);
 
-			SetCursorPos(center.x, center.y);
+			SetCursorPos(center.x*3, center.y*3);
+
+			count = 0;
 		}
 
-		
+		count += 1;
+		count2 += 1;
 
-		imshow("Contour:", image_copy);
+		if (count > 20 && blinked == false && count2 > 10) {
+			
+			mouse_event(MOUSEEVENTF_LEFTDOWN, x1, y1, 0, 0);
+			mouse_event(MOUSEEVENTF_LEFTUP, x1, y1, 0, 0);
+			blinked = true;
+			count2 = 0;
 
+		}
+
+
+		imshow("Contour: ", image_copy);
+		resizeWindow("Contour: ", 600, 600);
 		
 
 		char c = (char)waitKey(25);
