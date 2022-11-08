@@ -26,76 +26,66 @@ int findLargestArea(std::vector<std::vector<cv::Point>> contours){
 
 int main()
 {
-	VideoCapture cap(1);
+	VideoCapture cap(0);
 	Mat frame;
 
 	int count = 0;
 	int count2 = 0;
 	bool blinked = false;
 
+	stringstream text;
+
+	cv::Mat threshed;
+
+	int x1 = 0;
+	int y1 = 0;
+
 	while (1) {
+
 		cap >> frame;
 
 		if (frame.empty()) {
 			break;
 		}
 
-		cv::Mat threshed;
-
 		cvtColor(frame, frame, cv::COLOR_RGB2GRAY);
 
 		GaussianBlur(frame, frame, Size(17, 17), 0);
 
-		threshold(frame, threshed, 20, 255, THRESH_BINARY_INV);
+		threshold(frame, threshed, 50, 255, THRESH_BINARY_INV);
 
 		vector<vector<Point>> contours;
 		vector<Vec4i> hierarchy;
 		findContours(threshed, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
 		// draw contours on the original image
 		Mat image_copy = frame.clone();
-		stringstream text;
-
-		int x1 = 0;
-		int y1 = 0;
-
+		
 		namedWindow("Contour: ", WINDOW_NORMAL);
 
 		int x = GetSystemMetrics(SM_CXSCREEN);
 		int y = GetSystemMetrics(SM_CYSCREEN);
 
-		if (!contours.empty()) {
-			drawContours(image_copy, contours, findLargestArea(contours), Scalar(255, 0, 0), 3);
 
-			cv::Moments M = cv::moments(contours[findLargestArea(contours)]);
-			cv::Point center(M.m10 / M.m00, M.m01 / M.m00);
+		drawContours(image_copy, contours, findLargestArea(contours), Scalar(255, 0, 0), 3);
 
-			circle(image_copy, center, 25, (255, 255, 255), -1);
+		cv::Moments M = cv::moments(contours[findLargestArea(contours)]);
+		cv::Point center(M.m10 / M.m00, M.m01 / M.m00);
 
-			cv::Point origin(0, 10);
+		circle(image_copy, center, 25, (255, 255, 255), -1);
 
-			x1 = center.x;
-			y1 = center.y;
+		cv::Point origin(0, 10);
 
-			text << "x: " << center.x << "y: " << center.y;
+		x1 = center.x;
+		y1 = center.y;
 
-			putText(image_copy, text.str(), origin, FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1);
+		text << "x: " << center.x << "y: " << center.y;
 
-			SetCursorPos(center.x*3, center.y*3);
+		putText(image_copy, text.str(), origin, FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1);
 
-			count = 0;
-		}
+		SetCursorPos(center.x*3, center.y*3);
 
-		count += 1;
-		count2 += 1;
-
-		if (count > 20 && blinked == false && count2 > 10) {
-			
-			mouse_event(MOUSEEVENTF_LEFTDOWN, x1, y1, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTUP, x1, y1, 0, 0);
-			blinked = true;
-			count2 = 0;
-
-		}
+		count = 0;
+		
 
 
 		imshow("Contour: ", image_copy);
